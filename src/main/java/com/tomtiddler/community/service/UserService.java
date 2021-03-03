@@ -2,6 +2,7 @@ package com.tomtiddler.community.service;
 
 import com.tomtiddler.community.dao.UserMapper;
 import com.tomtiddler.community.entity.User;
+import com.tomtiddler.community.util.CommunityConst;
 import com.tomtiddler.community.util.CommunityUtil;
 import com.tomtiddler.community.util.MailClient;
 import org.apache.commons.lang3.StringUtils;
@@ -17,7 +18,7 @@ import java.util.Map;
 import java.util.Random;
 
 @Service
-public class UserService {
+public class UserService implements CommunityConst {
     @Autowired
     private UserMapper userMapper;
 
@@ -37,6 +38,11 @@ public class UserService {
         return userMapper.selectById(userId);
     };
 
+    /**
+     * 注册用户
+     * @param user
+     * @return
+     */
     public Map<String, Object> register(User user) {
         Map<String, Object> map = new HashMap<>();
 
@@ -91,5 +97,16 @@ public class UserService {
         mailClient.sendMail(user.getEmail(), "激活邮件", content);
 
         return map; // map 为空代表没有问题
+    }
+
+    public int activation(int userId, String code) {
+        User user = userMapper.selectById(userId);
+        if (user.getStatus() == 1) {
+            return ACTIVATION_REPEAT;
+        } else if (user.getActivationCode().equals(code)) {
+            userMapper.updateStatus(userId, 1);
+            return ACTIVATION_SUCCESS;
+        }
+        return ACTIVATION_FAILURE;
     }
 }

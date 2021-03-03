@@ -2,16 +2,18 @@ package com.tomtiddler.community.controller;
 
 import com.tomtiddler.community.entity.User;
 import com.tomtiddler.community.service.UserService;
+import com.tomtiddler.community.util.CommunityConst;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.Map;
 
 @Controller
-public class LoginController {
+public class LoginController implements CommunityConst {
 
     @Autowired
     private UserService userService;
@@ -19,6 +21,11 @@ public class LoginController {
     @RequestMapping(path = "/register",method = RequestMethod.GET)
     public  String getRegisterPage() {
         return "/site/register";
+    }
+
+    @RequestMapping(path = "/login",method = RequestMethod.GET)
+    public  String getLoginPage() {
+        return "/site/login";
     }
 
     @RequestMapping(path = "/register",method = RequestMethod.POST)
@@ -34,5 +41,21 @@ public class LoginController {
         model.addAttribute("passwordMsg", map.get("passwordMessage"));
         model.addAttribute("emailMsg", map.get("emailMessage"));
         return "/site/register";
+    }
+
+    @RequestMapping(path = "/activation/{userId}/{code}", method = RequestMethod.GET)
+    public String activation(Model model, @PathVariable("userId") int userId, @PathVariable("code") String code) {
+        int result = userService.activation(userId, code);
+        if (result == ACTIVATION_SUCCESS) {
+            model.addAttribute("msg", "激活成功，您的账号已经可以正常使用了");
+            model.addAttribute("target", "/index");
+        } else if (result == ACTIVATION_REPEAT) {
+            model.addAttribute("msg", "激活失败，该账号已经激活了");
+            model.addAttribute("target", "/index");
+        } else {
+            model.addAttribute("msg", "激活失败，验证码错误");
+            model.addAttribute("target", "/index");
+        }
+        return "/site/operate-result";
     }
 }
