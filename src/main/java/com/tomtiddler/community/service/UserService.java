@@ -170,4 +170,8 @@ public class UserService implements CommunityConst {
         ticket2 = loginTicketMapper.selectByTicket(ticket);
         System.out.println("注销之后的ticket值为：" + ticket2);
     }
+
+    public LoginTicket findLoginTicket(String ticket) {
+        return loginTicketMapper.selectByTicket(ticket);
+    }
 }
