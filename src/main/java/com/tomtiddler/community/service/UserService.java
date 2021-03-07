@@ -8,6 +8,8 @@ import com.tomtiddler.community.util.CommunityConst;
 import com.tomtiddler.community.util.CommunityUtil;
 import com.tomtiddler.community.util.MailClient;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.Random;
 
 @Service
 public class UserService implements CommunityConst {
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     @Autowired
     private UserMapper userMapper;
 
@@ -143,6 +146,7 @@ public class UserService implements CommunityConst {
         //验证密码
         password = CommunityUtil.md5(password + user.getSalt());
         System.out.printf("计算出的密码值为{%s}", password);
+        logger.info("计算出的密码值为：" + password);
         if (!user.getPassword().equals(password)) {
             map.put("passwordMsg", "密码不正确！");
             return map;
@@ -173,5 +177,13 @@ public class UserService implements CommunityConst {
 
     public LoginTicket findLoginTicket(String ticket) {
         return loginTicketMapper.selectByTicket(ticket);
+    }
+
+    public int updateHeader(int userId, String headerUrl) {
+        return userMapper.updateHeader(userId, headerUrl);
+    }
+
+    public int changePwd(int userId, String pwd) {
+        return userMapper.updatePassword(userId, pwd);
     }
 }
