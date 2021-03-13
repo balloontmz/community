@@ -1,11 +1,19 @@
 package com.tomtiddler.community.controller;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import com.tomtiddler.community.entity.Comment;
 import com.tomtiddler.community.entity.DiscussPost;
+import com.tomtiddler.community.entity.Page;
 import com.tomtiddler.community.entity.User;
+import com.tomtiddler.community.service.CommentService;
 import com.tomtiddler.community.service.DiscussPostService;
 import com.tomtiddler.community.service.UserService;
+import com.tomtiddler.community.util.CommunityConst;
 import com.tomtiddler.community.util.CommunityUtil;
 import com.tomtiddler.community.util.HostHolder;
 
@@ -19,7 +27,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping("/discuss")
-public class DiscussPostController {
+public class DiscussPostController implements CommunityConst {
     @Autowired
     private DiscussPostService discussPostService;
 
@@ -28,6 +36,9 @@ public class DiscussPostController {
 
     @Autowired
     private HostHolder hostHolder;
+
+    @Autowired
+    private CommentService commentService;
 
     @RequestMapping(path = "/add", method = RequestMethod.POST)
     @ResponseBody
@@ -47,14 +58,59 @@ public class DiscussPostController {
     }
 
     @RequestMapping(path = "/detail/{discussPostId}", method = RequestMethod.GET)
-    public String getDiscussPost(@PathVariable("discussPostId") int discussPostId, Model model) {
-        //查询帖子
+    public String getDiscussPost(@PathVariable("discussPostId") int discussPostId, Model model, Page page) {
+        // 查询帖子
         DiscussPost post = discussPostService.findDiscussPostById(discussPostId);
         model.addAttribute("post", post);
-        //查询帖子作者
+        // 查询帖子作者
         User user = userService.findUserById(post.getUserId());
         model.addAttribute("user", user);
 
+        // 评论的分页信息
+        page.setLimit(5);
+        page.setPath("/discuss/detail/" + discussPostId);
+        page.setRows(post.getCommentCount());
+
+        //帖子评论
+        List<Comment> commentList = commentService.findCommentByEntity(ENTITY_TYPE_POST, post.getId(), page.getOffset(),
+                page.getLimit());
+
+        List<Map<String, Object>> commentVoList = new ArrayList<>();
+        if (commentList != null) {
+            for (Comment comment : commentList) {
+                Map<String, Object> commentVo = new HashMap<>();
+                commentVo.put("comment", comment);
+                commentVo.put("user", userService.findUserById(comment.getUserId()));
+
+                //评论回复
+                List<Comment> replyList = commentService.findCommentByEntity(ENTITY_TYPE_COMMENT, comment.getId(), 0, Integer.MAX_VALUE);
+                //回复vo列表
+                List<Map<String, Object>> replyVoList = new ArrayList<>();
+                if (replyList != null) {
+                    for (Comment reply : replyList) {
+                        Map<String, Object> replyVo = new HashMap<>();
+                        replyVo.put("reply", reply);
+                        //作者
+                        replyVo.put("user", userService.findUserById(reply.getUserId()));
+                        //回复的目标
+                        User target = reply.getTargetId() == 0 ? null : userService.findUserById(reply.getTargetId());
+                        replyVo.put("target", target);
+
+                        replyVoList.add(replyVo);
+                    }
+                }
+                commentVo.put("replys", replyVoList);
+
+                //回复数量
+                int replyCnt = commentService.findCommentCount(ENTITY_TYPE_COMMENT, comment.getId());
+                commentVo.put("replyCount", replyCnt);
+
+                commentVoList.add(commentVo);
+            }
+        }
+
+        model.addAttribute("comments", commentVoList);
+        
         return "/site/discuss-detail";
     }
 }
