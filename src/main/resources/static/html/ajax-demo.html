@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ajax</title>
+</head>
+<body>
+    <p>
+        <input type="button" value="发送" onclick="send();">
+    </p>
+</body>
+<script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.5.1.min.js" crossorigin="anonymous"></script>
+<script>
+    function send() {
+        $.post(
+            "/test/alpha/ajax",
+            {
+                name: "tomtiddler",
+                age: "27"
+            },
+            function (data) {
+                console.log(data)
+                console.log(typeof(data))
+                
+                console.log($.parseJSON(data))
+                console.log(JSON.parse(data))
+            }
+        );
+    }
+</script>
+</html>

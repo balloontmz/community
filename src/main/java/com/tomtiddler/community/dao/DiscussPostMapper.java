@@ -13,4 +13,8 @@ public interface DiscussPostMapper {
     //@Param() 取别名
     //需要动态拼接 sql， 函数有且仅有一个条件，并且会用到这个条件，则必须申明别名
     int selectDiscussPostRows(@Param("userId")int userId);
+
+    int insertDiscussPost(DiscussPost discussPost);
+
+    DiscussPost selectDiscussPostById(int id);
 }
