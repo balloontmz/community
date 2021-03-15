@@ -2,9 +2,11 @@ package com.tomtiddler.community;
 
 import com.tomtiddler.community.dao.DiscussPostMapper;
 import com.tomtiddler.community.dao.LoginTicketMapper;
+import com.tomtiddler.community.dao.MessageMapper;
 import com.tomtiddler.community.dao.UserMapper;
 import com.tomtiddler.community.entity.DiscussPost;
 import com.tomtiddler.community.entity.LoginTicket;
+import com.tomtiddler.community.entity.Message;
 import com.tomtiddler.community.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,9 @@ public class MapperTests {
 
     @Autowired
     private LoginTicketMapper loginTicketMapper;
+
+    @Autowired
+    private MessageMapper messageMapper;
 
     @Test
     public void testSelectUser(){
@@ -95,5 +100,28 @@ public class MapperTests {
         loginTicketMapper.updateStatus("abc", 1);
         loginTicket = loginTicketMapper.selectByTicket("abc");
         System.out.println(loginTicket);
+    }
+
+    @Test
+    public void testSelectLetters() {
+        List<Message> msgs = messageMapper.selectConversations(111, 0, 20);
+        for (Message message : msgs) {
+            System.out.println(message);
+        }
+
+        int cnt = messageMapper.selectConversationCount(111);
+
+        System.out.println("当前会话数量为：" + cnt);
+
+        List<Message> letters = messageMapper.selectLetters("111_112", 0, 20);
+        for (Message letter : letters) {
+            System.out.println(letter);
+        }
+
+        int unreadCnt = messageMapper.selectLetterUnreadCount(111, null);
+        System.out.println("未读总数为：" + unreadCnt);
+
+        int unreadCnt2 = messageMapper.selectLetterUnreadCount(131, "111_131");
+        System.out.println("未读会话2 " + unreadCnt2);
     }
 }
