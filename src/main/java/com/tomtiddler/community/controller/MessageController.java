@@ -1,16 +1,17 @@
 package com.tomtiddler.community.controller;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonCreator.Mode;
 import com.tomtiddler.community.entity.Message;
 import com.tomtiddler.community.entity.Page;
 import com.tomtiddler.community.entity.User;
 import com.tomtiddler.community.service.MessageService;
 import com.tomtiddler.community.service.UserService;
+import com.tomtiddler.community.util.CommunityUtil;
 import com.tomtiddler.community.util.HostHolder;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class MessageController {
@@ -75,7 +77,8 @@ public class MessageController {
 
         //私信列表
         List<Message> letterList = messageService.findLetters(conversationId, page.getOffset(), page.getLimit());
-        List<Map<String, Object>> letters = new ArrayList();
+        messageService.readMessage(getLetterIds(letterList));//标记已读
+        List<Map<String, Object>> letters = new ArrayList<>();
         if (letterList != null) {
             for (Message letter : letterList) {
                 Map<String, Object> map = new HashMap<>();
@@ -102,5 +105,40 @@ public class MessageController {
             return userService.findUserById(d1);
         }
         return userService.findUserById(d0);
+    }
+
+    private List<Integer> getLetterIds(List<Message> letterList) {
+        List<Integer> ids = new ArrayList<>();
+
+        if (letterList != null) {
+            for (Message message : letterList) {
+                if (hostHolder.getUser().getId() == message.getToId() && message.getStatus() == 0) {
+                    ids.add(message.getId());
+                }                
+            }
+        }
+        return ids;
+    }
+
+    @RequestMapping(path = "/letter/send", method = RequestMethod.POST)
+    @ResponseBody
+    public String sendLetter(String toName, String content) {
+        User target = userService.findUserByName(toName);
+        if (target == null) {
+            return CommunityUtil.getJSONString(1, "目标用户不存在");
+        }
+
+        Message message = new Message();
+        message.setFromId(hostHolder.getUser().getId());
+        message.setToId(target.getId());
+        if (message.getFromId() < message.getToId()) {
+            message.setConversationId(message.getFromId() + "_" + message.getToId());
+        } else {
+            message.setConversationId(message.getToId() + "_" + message.getFromId());
+        }
+        message.setContent(content);
+        message.setCreateTime(new Date());
+        messageService.addMessage(message);
+        return CommunityUtil.getJSONString(0);
     }
 }

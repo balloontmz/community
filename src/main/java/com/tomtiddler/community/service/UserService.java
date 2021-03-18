@@ -186,4 +186,8 @@ public class UserService implements CommunityConst {
     public int changePwd(int userId, String pwd) {
         return userMapper.updatePassword(userId, pwd);
     }
+
+    public User findUserByName(String username) {
+        return userMapper.selectByName(username);
+    }
 }
