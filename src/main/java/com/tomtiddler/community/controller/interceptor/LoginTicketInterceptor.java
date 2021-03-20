@@ -47,7 +47,7 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
         loggger.debug("postHandle: " + handler.toString());
         User user = hostHolder.getUser();
         if (user != null && modelAndView != null) {
-            modelAndView.addObject("loginUser", user);
+            modelAndView.addObject("loginUser", user);//全局的
         }
         return;
     }
