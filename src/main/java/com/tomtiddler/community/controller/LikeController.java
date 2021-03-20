@@ -31,10 +31,10 @@ public class LikeController {
     @LoginRequired
     @RequestMapping(path = "/like", method = RequestMethod.POST)
     @ResponseBody
-    public String like(int entityType, int entityId) {
+    public String like(int entityType, int entityId, int entityUserId) {
         User user = hostHolder.getUser();
         logger.info("test1");
-        likeService.like(user.getId(), entityType, entityId);
+        likeService.like(user.getId(), entityType, entityId, entityUserId);
         logger.info("test2");
         //数量
         long likeCnt = likeService.findEntityLikeCount(entityType, entityId);

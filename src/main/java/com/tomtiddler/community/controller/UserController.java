@@ -7,8 +7,10 @@ import java.io.OutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.annotation.JsonCreator.Mode;
 import com.tomtiddler.community.annotation.LoginRequired;
 import com.tomtiddler.community.entity.User;
+import com.tomtiddler.community.service.LikeService;
 import com.tomtiddler.community.service.UserService;
 import com.tomtiddler.community.util.CommunityUtil;
 import com.tomtiddler.community.util.HostHolder;
@@ -44,6 +46,9 @@ public class UserController {
 
     @Autowired
     private HostHolder hostHolder;
+
+    @Autowired
+    private LikeService likeService;
 
     @LoginRequired
     @RequestMapping(path = "/setting", method = RequestMethod.GET)
@@ -131,5 +136,21 @@ public class UserController {
         model.addAttribute("target", "/index");
         //修改密码成功跳转
         return "site/operate-result";
+    }
+
+    //个人主页
+    @RequestMapping(path = "/profile/{userId}", method = RequestMethod.GET)
+    public String getProfilePage(@PathVariable("userId") int userId, Model model) {
+        User user = userService.findUserById(userId);
+        if (user == null) {
+            throw new RuntimeException("该用户不存在");
+        }
+        
+        //用户基本信息
+        model.addAttribute("user", user);
+        //获赞数量
+        int likeCount = likeService.findUserLikeCount(userId);
+        model.addAttribute("likeCount", likeCount);
+        return "/site/profile";
     }
 }
