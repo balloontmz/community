@@ -10,7 +10,7 @@ function follow() {
 			CONTEXT_PATH + "/follow",
 			{"entityType": 3, "entityId": $(btn).prev().val()},
 			function (data) {
-				data = $.parseJSON(data)
+				data = $.parseJSON(data);
 				if (data.code == 0) {
 					console.log('返回的数据为：', data)
 					window.location.reload()
@@ -26,7 +26,7 @@ function follow() {
 			CONTEXT_PATH + "/unFollow",
 			{"entityType": 3, "entityId": $(btn).prev().val()},
 			function (data) {
-				data = $.parseJSON(data)
+				data = $.parseJSON(data);
 				if (data.code == 0) {
 					window.location.reload()
 				} else {
