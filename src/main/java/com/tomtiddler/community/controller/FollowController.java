@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.tomtiddler.community.annotation.LoginRequired;
+import com.tomtiddler.community.entity.Event;
 import com.tomtiddler.community.entity.Page;
 import com.tomtiddler.community.entity.User;
+import com.tomtiddler.community.event.EventProducer;
 import com.tomtiddler.community.service.FollowService;
 import com.tomtiddler.community.service.UserService;
 import com.tomtiddler.community.util.CommunityConst;
@@ -27,6 +29,9 @@ public class FollowController implements CommunityConst {
     private static final Logger logger = LoggerFactory.getLogger(FollowController.class);
 
     @Autowired
+    private EventProducer eventProducer;
+
+    @Autowired
     private FollowService followService;
 
     @Autowired
@@ -41,6 +46,11 @@ public class FollowController implements CommunityConst {
     public String follow(int entityType, int entityId) {
         User user = hostHolder.getUser();
         followService.follow(user.getId(), entityType, entityId);
+
+        // 触发关注事件
+        Event event = new Event().setTopic(TOPIC_FOLLOW).setUserId(hostHolder.getUser().getId())
+                .setEntityType(entityType).setEntityId(entityId).setEntityUserId(entityId);
+        eventProducer.fireEvent(event);
 
         logger.info("返回已关注之前");
         return CommunityUtil.getJSONString(0, "已关注");
@@ -66,13 +76,13 @@ public class FollowController implements CommunityConst {
 
         page.setLimit(5);
         page.setPath("/followees/" + userId);
-        page.setRows((int)followService.findFolloweeCount(userId, ENTITY_TYPE_USER));
+        page.setRows((int) followService.findFolloweeCount(userId, ENTITY_TYPE_USER));
 
         List<Map<String, Object>> userList = followService.findFollowees(userId, page.getOffset(), page.getLimit());
         if (userList != null) {
-            for (Map<String,Object> map : userList) {
-                User u = (User)map.get("user");
-                map.put("hasFollowed", hasFollowed(u.getId()));//补充是否已关注
+            for (Map<String, Object> map : userList) {
+                User u = (User) map.get("user");
+                map.put("hasFollowed", hasFollowed(u.getId()));// 补充是否已关注
             }
         }
         model.addAttribute("users", userList);
@@ -91,14 +101,14 @@ public class FollowController implements CommunityConst {
 
         page.setLimit(5);
         page.setPath("/followers/" + userId);
-        page.setRows((int)followService.findFollowerCount(ENTITY_TYPE_USER, userId));
+        page.setRows((int) followService.findFollowerCount(ENTITY_TYPE_USER, userId));
         logger.info("分页对象构造完成之后");
 
         List<Map<String, Object>> userList = followService.findFollowers(userId, page.getOffset(), page.getLimit());
         if (userList != null) {
-            for (Map<String,Object> map : userList) {
-                User u = (User)map.get("user");
-                map.put("hasFollowed", hasFollowed(u.getId()));//补充是否已关注
+            for (Map<String, Object> map : userList) {
+                User u = (User) map.get("user");
+                map.put("hasFollowed", hasFollowed(u.getId()));// 补充是否已关注
             }
         }
         logger.info("取到的结果为：");
